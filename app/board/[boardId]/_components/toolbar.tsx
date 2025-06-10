@@ -1,3 +1,4 @@
+'use client'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export const Toolbar = () => {
@@ -17,7 +18,7 @@ export const Toolbar = () => {
   )
 }
 
-Toolbar.Skeleton = function ToolbarSkeleton() {
+export function ToolbarSkeleton() {
   return (
     <div className="absolute top-1/2 -translate-y-1/2 left-2 flex flex-col gap-y-4 h-[360px] w-[52px] rounded-md shadow-md">
       <Skeleton className="w-full h-full bg-muted-foreground" />
