@@ -6,7 +6,7 @@ export const get = query({
     orgId: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = ctx.auth.getUserIdentity()
+    const userId = await ctx.auth.getUserIdentity()
     if (!userId) {
       throw new Error('Unauthorized')
     }
@@ -17,6 +17,22 @@ export const get = query({
       .order('desc')
       .collect()
 
-    return boards
+    const boardsWithFavorites = boards.map((board) => {
+      return ctx.db
+        .query('userFavorites')
+        .withIndex('by_user_board', (q) =>
+          q.eq('userId', userId.subject).eq('boardId', board._id),
+        )
+        .unique()
+        .then((favorite) => {
+          return {
+            ...board,
+            isFavorite: !!favorite,
+          }
+        })
+    })
+
+    const boardsWithFavoritesBoolean = await Promise.all(boardsWithFavorites)
+    return boardsWithFavoritesBoolean
   },
 })
