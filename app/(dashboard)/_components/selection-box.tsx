@@ -53,6 +53,7 @@ export const SelectionBox = memo(
               y={0}
               onPointerDown={(e) => {
                 e.stopPropagation()
+                onResizeHandlePointerDown(Side.Top + Side.Left, bounds)
               }}
             />
             <rect
@@ -67,6 +68,7 @@ export const SelectionBox = memo(
               y={0}
               onPointerDown={(e) => {
                 e.stopPropagation()
+                onResizeHandlePointerDown(Side.Top, bounds)
               }}
             />
             <rect
@@ -81,6 +83,7 @@ export const SelectionBox = memo(
               y={0}
               onPointerDown={(e) => {
                 e.stopPropagation()
+                onResizeHandlePointerDown(Side.Top + Side.Right, bounds)
               }}
             />
             <rect
@@ -95,6 +98,7 @@ export const SelectionBox = memo(
               y={0}
               onPointerDown={(e) => {
                 e.stopPropagation()
+                onResizeHandlePointerDown(Side.Right, bounds)
               }}
             />
             <rect
@@ -109,6 +113,7 @@ export const SelectionBox = memo(
               y={0}
               onPointerDown={(e) => {
                 e.stopPropagation()
+                onResizeHandlePointerDown(Side.Bottom + Side.Right, bounds)
               }}
             />
             <rect
@@ -123,6 +128,7 @@ export const SelectionBox = memo(
               y={0}
               onPointerDown={(e) => {
                 e.stopPropagation()
+                onResizeHandlePointerDown(Side.Bottom, bounds)
               }}
             />
             <rect
@@ -137,6 +143,7 @@ export const SelectionBox = memo(
               y={0}
               onPointerDown={(e) => {
                 e.stopPropagation()
+                onResizeHandlePointerDown(Side.Bottom + Side.Left, bounds)
               }}
             />
             <rect
@@ -151,6 +158,7 @@ export const SelectionBox = memo(
               y={0}
               onPointerDown={(e) => {
                 e.stopPropagation()
+                onResizeHandlePointerDown(Side.Left, bounds)
               }}
             />
           </>
