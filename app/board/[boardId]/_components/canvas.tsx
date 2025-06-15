@@ -5,6 +5,7 @@ import { SelectionBox } from '@/app/(dashboard)/_components/selection-box'
 import { Info } from '@/app/board/[boardId]/_components/info'
 import { LayerPreview } from '@/app/board/[boardId]/_components/layer-preview'
 import { Participants } from '@/app/board/[boardId]/_components/participants'
+import { SelectionTool } from '@/app/board/[boardId]/_components/selection-tool'
 import { Toolbar } from '@/app/board/[boardId]/_components/toolbar'
 import {
   connectionIdToColor,
@@ -105,6 +106,19 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     [lastUsedColor],
   )
 
+  const unSelectedLayer = useMutation(({ self, setMyPresence }) => {
+    if (self.presence.selection.length > 0) {
+      setMyPresence(
+        {
+          selection: [],
+        },
+        {
+          addToHistory: true,
+        },
+      )
+    }
+  }, [])
+
   const resizeSelectedLayer = useMutation(
     ({ storage, self }, point: Point) => {
       if (canvasState.mode !== CanvasMode.Resizing) {
@@ -123,6 +137,35 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       if (layer) {
         layer.update(bounds)
       }
+    },
+    [canvasState],
+  )
+
+  const translateSelectedLayer = useMutation(
+    ({ storage, self }, point: Point) => {
+      if (canvasState.mode !== CanvasMode.Translating) {
+        return
+      }
+
+      const offset = {
+        x: point.x - canvasState.current.x,
+        y: point.y - canvasState.current.y,
+      }
+
+      const liveLayers = storage.get('layers')
+
+      for (const layerId of self.presence.selection) {
+        const layer = liveLayers.get(layerId)
+
+        if (layer) {
+          layer.update({
+            x: layer.get('x') + offset.x,
+            y: layer.get('y') + offset.y,
+          })
+        }
+      }
+
+      setCanvasState({ mode: CanvasMode.Translating, current: point })
     },
     [canvasState],
   )
@@ -156,13 +199,15 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
       if (canvasState.mode === CanvasMode.Resizing) {
         resizeSelectedLayer(current)
+      } else if (canvasState.mode === CanvasMode.Translating) {
+        translateSelectedLayer(current)
       }
 
       setMyPresence({
         cursor: current,
       })
     },
-    [canvasState, resizeSelectedLayer, camera],
+    [canvasState, resizeSelectedLayer, camera, translateSelectedLayer],
   )
 
   const onPointerLeave = useMutation(({ setMyPresence }) => {
@@ -175,7 +220,15 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     ({}, e) => {
       const point = pointerEventToCanvasPoint(e, camera)
 
-      if (canvasState.mode === CanvasMode.Inserting) {
+      if (
+        canvasState.mode === CanvasMode.None ||
+        canvasState.mode === CanvasMode.Pressing
+      ) {
+        unSelectedLayer()
+        setCanvasState({
+          mode: CanvasMode.None,
+        })
+      } else if (canvasState.mode === CanvasMode.Inserting) {
         insertLayer(canvasState.layerType, point)
       } else {
         setCanvasState({
@@ -185,7 +238,20 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
       history.resume()
     },
-    [canvasState, camera, history, insertLayer],
+    [canvasState, camera, history, insertLayer, unSelectedLayer],
+  )
+
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      const point = pointerEventToCanvasPoint(e, camera)
+
+      if (canvasState.mode === CanvasMode.Inserting) {
+        return
+      }
+
+      setCanvasState({ origin: point, mode: CanvasMode.Pressing })
+    },
+    [camera, canvasState.mode],
   )
 
   const onLayerPointerDown = useMutation(
@@ -249,12 +315,17 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         undo={history.undo}
         redo={history.redo}
       />
+      <SelectionTool
+        camera={camera}
+        setLastUsedColor={setLastUsedColor}
+      />
       <svg
         className="h-[100vh] w-[100vw]"
         onWheel={onWheel}
         onPointerMove={onPointerMove}
         onPointerLeave={onPointerLeave}
         onPointerUp={onPointerUp}
+        onPointerDown={onPointerDown}
       >
         <g style={{ transform: `translate(${camera.x}px, ${camera.y}px)` }}>
           {layerIds.map((layerId) => (
