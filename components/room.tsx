@@ -1,5 +1,7 @@
 'use client'
 
+import { Layer } from '@/types/canvas'
+import { LiveList, LiveMap, LiveObject } from '@liveblocks/node'
 import {
   ClientSideSuspense,
   LiveblocksProvider,
@@ -20,7 +22,11 @@ export const Room = ({ children, roomId, fallback }: RoomProps) => {
       throttle={16}
     >
       <RoomProvider
-        initialPresence={{ cursor: null }}
+        initialPresence={{ cursor: null, selection: [] }}
+        initialStorage={{
+          layers: new LiveMap<string, LiveObject<Layer>>(),
+          layerIds: new LiveList([]),
+        }}
         id={roomId}
       >
         <ClientSideSuspense fallback={fallback}>{children}</ClientSideSuspense>
